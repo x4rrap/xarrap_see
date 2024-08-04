@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-print("by @hagg4r")
+
 def formatta_numero_telefono(numero_telefono):
     """Formatta il numero di telefono con le parentesi quadre."""
     return f"[{numero_telefono}]"
@@ -21,7 +21,7 @@ def cerca_accounts(numero_telefono):
         if risposta.status_code == 200:
             print(f"\nRisultati della ricerca su {piattaforma} per il numero {formatta_numero_telefono(numero_telefono)}:")
             soup = BeautifulSoup(risposta.text, 'html.parser')
-            risultati = soup.find_all('div', {'class': 'yuRUbf'})
+            risultati = soup.find_all('div', {'class_': lambda l: 'yuRUbf' in l})
 
             for risultato in risultati:
                 testo = risultato.get_text().strip()
@@ -62,14 +62,15 @@ def ricerca_inverso_numero_telefono(numero_telefono):
 
 def cerca_nome_e_cognome(numero_telefono):
     """Utilizza un Google Dork per cercare il numero di telefono e il nome."""
-    url_dork = f"https://www.google.com/search?q=site%3Afacebook.com+%22{numero_telefono}%22+intitle%3A%22nome+cognome%22"
+    url_dork = f"https://www.google.com/search?q=site:facebook.com+%22{numero_telefono}%22+intitle:%22nome+cognome%22"
 
     risposta = requests.get(url_dork)
 
     if risposta.status_code == 200:
         print(f"\nRisultati del Google Dork per il numero {formatta_numero_telefono(numero_telefono)}:")
         soup = BeautifulSoup(risposta.text, 'html.parser')
-        risultati = soup.find_all('div', {'class': 'yuR```python
+        risultati = soup.find_all('div', {'class_': lambda l: 'yuRUbf' in l})
+
         for risultato in risultati:
             testo = risultato.get_text().strip()
             link = risultato.find('a')['href']
@@ -86,7 +87,7 @@ def cerca_nome_e_cognome(numero_telefono):
                 if risposta_ricerca.status_code == 200:
                     print(f"\nRisultati aggiuntivi della ricerca su Google per il nome {nome_estratto}:")
                     soup = BeautifulSoup(risposta_ricerca.text, 'html.parser')
-                    risultati = soup.find_all('div', {'class': 'yuRUbf'})
+                    risultati = soup.find_all('div', {'class_': lambda l: 'yuRUbf' in l})
 
                     for risultato in risultati:
                         testo = risultato.get_text().strip()
@@ -96,8 +97,8 @@ def cerca_nome_e_cognome(numero_telefono):
                         # Estrae il nome utente, il nome e il cognome dal link del profilo di Instagram o Facebook
                         if "instagram.com" in link or "facebook.com" in link:
                             profilo = link.split("/")[-1]
-                            nome_utente = profilo.split("?")[0]
-                            nome_cognome = testo.split(" - ")[-1].split(" · ")[0]
+                            nome_utente = profilo.split("?")
+                            nome_cognome = testo.split(" - ")[-1].split(" · ")
                             print(f"Nome utente: {nome_utente}, Nome e cognome: {nome_cognome}")
                 else:
                     print("Impossibile recuperare i risultati della ricerca aggiuntivi.")
