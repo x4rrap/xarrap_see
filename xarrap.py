@@ -1,8 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-
-print("by hagg4r")
+print("by @hagg4r")
 def formatta_numero_telefono(numero_telefono):
     """Formatta il numero di telefono con le parentesi quadre."""
     return f"[{numero_telefono}]"
@@ -70,8 +69,7 @@ def cerca_nome_e_cognome(numero_telefono):
     if risposta.status_code == 200:
         print(f"\nRisultati del Google Dork per il numero {formatta_numero_telefono(numero_telefono)}:")
         soup = BeautifulSoup(risposta.text, 'html.parser')
-        risultati = soup.find_all('div', {'class': 'yuRrisultati:
-
+        risultati = soup.find_all('div', {'class': 'yuR```python
         for risultato in risultati:
             testo = risultato.get_text().strip()
             link = risultato.find('a')['href']
