@@ -1,87 +1,86 @@
 import requests
+from bs4 import BeautifulSoup
+import re
 
+print("by hagg4r")
 def format_phone_number(phone_number):
+    # Format phone number with square brackets
     return f"[{phone_number}]"
 
 def find_accounts(phone_number):
-    # Search for accounts connected to the phone number using a search engine
-    search_urls = [
-        (f"https://www.google.com/search?q=telegram+accounts+connected+to+%5B{phone_number}%5D", "Telegram"),
-        (f"https://www.google.com/search?q=watsapp+accounts+connected+to+%5B{phone_number}%5D", "WhatsApp"),
-        (f"https://www.google.com/search?q=instagram+accounts+connected+to+%5B{phone_number}%5D", "Instagram")
-    ]
+    # Search for accounts connected to the phone number using Google Search
+    search_urls = {
+        "Telegram": f"https://www.google.com/search?q=telegram+accounts+connected+to+%5B{phone_number}%5D",
+        "WhatsApp": f"https://www.google.com/search?q=whatsapp+accounts+connected+to+%5B{phone_number}%5D",
+        "Instagram": f"https://www.google.com/search?q=instagram+accounts+connected+to+%5B{phone_number}%5D"
+    }
 
-    for search_url, platform in search_urls:
+    for platform, search_url in search_urls.items():
         search_response = requests.get(search_url)
 
         if search_response.status_code == 200:
             print(f"{format_phone_number(phone_number)} Results from Google search on {platform}:")
-            print(search_response.text)
+            soup = BeautifulSoup(search_response.text, 'html.parser')
+            results = [result.get_text() for result in soup.find_all('div', {'class': 'yuRUbf'})]
+            for result in results:
+                print(result)
         else:
             print(f"Failed to fetch search results for {platform}.")
 
 def reverse_phone_lookup(phone_number):
-    # Whitepages.com lookup
-    whitepages_url = f"https://www.whitepages.com/phone/{phone_number}"
-    whitepages_response = requests.get(whitepages_url)
+    # Reverse phone number lookup using various websites
+    lookup_urls = {
+        "Whitepages": f"https://www.whitepages.com/phone/{phone_number}",
+        "Intelius": f"https://www.intelius.com/phone/{phone_number}",
+        "ZabaSearch": f"https://www.zabasearch.com/people/{phone_number}"
+    }
 
-    if whitepages_response.status_code == 200:
-        print(f"{format_phone_number(phone_number)} {whitepages_response.text}")
-    else:
-        print("Failed to fetch Whitepages information.")
+    for platform, lookup_url in lookup_urls.items():
+        response = requests.get(lookup_url)
 
-    # Intelius.com lookup
-    intelius_url = f"https://www.intelius.com/phone/{phone_number}"
-    intelius_response = requests.get(intelius_url)
-
-    if intelius_response.status_code == 200:
-        print(f"{format_phone_number(phone_number)} {intelius_response.text}")
-    else:
-        print("Failed to fetch Intelius information.")
-
-    # ZabaSearch.com lookup
-    zabasearch_url = f"https://www.zabasearch.com/people/{phone_number}"
-    zabasearch_response = requests.get(zabasearch_url)
-
-    if zabasearch_response.status_code == 200:
-        print(f"{format_phone_number(phone_number)} {zabasearch_response.text}")
-    else:
-        print("Failed to fetch ZabaSearch information.")
+        if response.status_code == 200:
+            print(f"{format_phone_number(phone_number)} {platform} results:")
+            print(response.text)
+        else:
+            print(f"Failed to fetch {platform} information.")
 
 def find_name_and_search(phone_number):
     # Use a Google Dork to search for the phone number and name
-    dork_url = f"https://www.google.com/search?q=site%3Afacebook.com+%22{phone_number}%22+intitle%3A%22{name%22"
-    
-    # Make an HTTP request to the URL
+    dork_url = f"https://www.google.com/search?q=site%3Afacebook.com+%22{phone_number}%22+intitle%3A%22name%22"
+
     response = requests.get(dork_url)
 
     if response.status_code == 200:
         print(f"{format_phone_number(phone_number)} Results from Google Dork:")
-        print(response.text)
-        
-        # Extract the name from the search results
-        for line in response.text.splitlines():
-            if "name" in line.lower() and "<b>" in line:
-                extracted_name = line.split("<b>").split("</b>")
+        soup = BeautifulSoup(response.text, 'html.parser')
+        results = [result.get_text() for result in soup.find_all('div', {'class': 'yuRUbf'})]
+        for result in results:
+            print(result)
+
+            # Extract the name from the search results using regex
+            name_match = re.search(r'intitle:"name":(.*?)<', result)
+            if name_match:
+                extracted_name = name_match.group(1)
                 print(f"{format_phone_number(phone_number)} Name found: {extracted_name}")
 
-        # Search for additional information based on the extracted name
-        if extracted_name:
-            search_url = f"https://www.google.com/search?q={extracted_name}"
-            search_response = requests.get(search_url)
+                # Search for additional information based on the extracted name
+                search_url = f"https://www.google.com/search?q={extracted_name}"
+                search_response = requests.get(search_url)
 
-            if search_response.status_code == 200:
-                print(f"{format_phone_number(phone_number)} Additional results from Google search:")
-                print(search_response.text)
-            else:
-                print("Failed to fetch additional search results.")
+                if search_response.status_code == 200:
+                    print(f"{format_phone_number(phone_number)} Additional results from Google search:")
+                    soup = BeautifulSoup(search_response.text, 'html.parser')
+                    results = [result.get_text() for result in soup.find_all('div', {'class': 'yuRUbf'})]
+                    for result in results:
+                        print(result)
+                else:
+                    print("Failed to fetch additional search results.")
     else:
         print("Failed to fetch search results.")
 
 def main():
-    phone_number = input("Inserisci il numero di telefono da cercare: ")
+    phone_number = input("Enter the phone number to search: ")
 
-    # Print a rectangular frame for the results
     print("-" * 80)
     print(f"| {format_phone_number(phone_number)} Results |")
     print("-" * 80)
