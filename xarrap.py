@@ -9,36 +9,24 @@ def formatta_numero_telefono(numero_telefono):
 def cerca_accounts(numero_telefono):
     """Cerca account collegati al numero di telefono utilizzando Google Search."""
     url_ricerca = {
-        "Telegram": f"https://www.google.com/search?q=telegram+account+collegati+a+%5B{numero_telefono}%5D",
-        "WhatsApp": f"https://www.google.com/search?q=whatsapp+account+collegati+a+%5B{numero_telefono}%5D",
-        "Instagram": f"https://www.google.com/search?q=instagram+account+collegati+a+%5B{numero_telefono}%5D",
-        "Facebook": f"https://www.google.com/search?q=facebook+account+collegati+a+%5B{numero_telefono}%5D"
+        "Telegram": f"https://www.google.com/search?q=telegram+account+collegati+a+{formatta_numero_telefono(numero_telefono)}",
+        "WhatsApp": f"https://www.google.com/search?q=whatsapp+account+collegati+a+{formatta_numero_telefono(numero_telefono)}",
+        "Instagram": f"https://www.google.com/search?q=instagram+account+collegati+a+{formatta_numero_telefono)}",
+        "Facebook": f"https://www.google.com/search?q=facebook+account+collegati+a+{formatta_numero_telefono(numero_telefono)}"
     }
 
     for piattaforma, url in url_ricerca.items():
         risposta = requests.get(url)
 
         if risposta.status_code == 200:
-            print(f"\nRisultati della ricerca su {piattaforma} per il numero {formatta_numero_telefono(numero_telefono)}:")
+            print(f"\n{'-' * 40}\nRisultati della ricerca su {piattaforma} per il numero {formatta_numero_telefono(numero_telefono)}:\n{'-' * 40}")
             soup = BeautifulSoup(risposta.text, 'html.parser')
-            risultati = soup.find_all('div', {'class_': lambda l: 'yuRUbf' in l})
+            risultati = soup.find_all('div', {'class': re.compile('yuRUbf')})
 
             for risultato in risultati:
                 testo = risultato.get_text().strip()
                 link = risultato.find('a')['href']
-
-                # Costruisce i link di WhatsApp e Telegram utilizzando il numero di telefono trovato nei risultati della ricerca
-                if piattaforma == "WhatsApp" and "+" in testo:
-                    link_whatsapp = f"https://api.whatsapp.com/send/?phone={testo.replace('+', '')}&text=&type=phone_number&app_absent=0"
-                    print(f"[ {testo} ]({link_whatsapp})")
-                elif piattaforma == "Telegram" and "+" in testo:
-                    link_telegram = f"https://t.me/{testo.replace('+', '')}"
-                    print(f"[ {testo} ]({link_telegram})")
-                elif piattaforma in ["Instagram", "Facebook"] and "+" in testo:
-                    link_placeholder = f"https://www.{piattaforma}.com/?hl=en&query={testo.replace('+', '')}"
-                    print(f"[ {testo} ]({link_placeholder})")
-                else:
-                    print(f"[ {testo} ]({link})")
+                print(f"[ {testo} ]({link})")
         else:
             print(f"Impossibile recuperare i risultati della ricerca per {piattaforma}.")
 
@@ -47,14 +35,16 @@ def ricerca_inverso_numero_telefono(numero_telefono):
     url_ricerca = {
         "Whitepages": f"https://www.whitepages.com/phone/{numero_telefono}",
         "Intelius": f"https://www.intelius.com/phone/{numero_telefono}",
-        "ZabaSearch": f"https://www.zabasearch.com/people/{numero_telefono}"
+        "ZabaSearch": f"https://www.zabasearch.com/people/{numero_telefono}",
+        "Spokeo": f"https://www.spokeo.com/phone-lookup/{numero_telefono}",
+        "Truecaller": f"https://www.truecaller.com/search/it/{numero_telefono}"
     }
 
     for piattaforma, url in url_ricerca.items():
         risposta = requests.get(url)
 
         if risposta.status_code == 200:
-            print(f"\nRisultati della ricerca inversa per il numero {formatta_numero_telefono(numero_telefono)} su {piattaforma}:")
+            print(f"\n{'-' * 40}\nRisultati della ricerca inversa per il numero {formatta_numero_telefono(numero_telefono)} su {piattaforma}:\n{'-' * 40}")
             soup = BeautifulSoup(risposta.text, 'html.parser')
             print(soup.prettify())
         else:
@@ -67,46 +57,56 @@ def cerca_nome_e_cognome(numero_telefono):
     risposta = requests.get(url_dork)
 
     if risposta.status_code == 200:
-        print(f"\nRisultati del Google Dork per il numero {formatta_numero_telefono(numero_telefono)}:")
+        print(f"\n{'-' * 40}\nRisultati del Google Dork per il numero {formatta_numero_telefono(numero_telefono)}:\n{'-' * 40}")
         soup = BeautifulSoup(risposta.text, 'html.parser')
-        risultati = soup.find_all('div', {'class_': lambda l: 'yuRUbf' in l})
+        risultati = soup.find_all('div', {'class': re.compile('yuRUbf')})
 
         for risultato in risultati:
             testo = risultato.get_text().strip()
             link = risultato.find('a')['href']
             print(f"[ {testo} ]({link})")
 
-            corrispondenza_nome = re.search(r'intitle:"nome+cognome":(.*?)<', testo)
-            if corrispondenza_nome:
-                nome_estratto = corrispondenza_nome.group(1)
-                print(f"\nNome e cognome trovati per il numero {formatta_numero_telefono(numero_telefono)}: {nome_estratto}")
+            # Estrae il prefisso del numero di telefono per capire in che area geografica si trova
+            prefisso = numero_telefono[:4]
+            citta = None
+            if prefisso == "+393":
+                citta = "Roma"
+            elif prefisso == "+3932":
+                citta = "Milano"
+            # Aggiungi qui altri prefissi e città se necessario
 
-                url_ricerca = f"https://www.google.com/search?q={nome_estratto}"
-                risposta_ricerca = requests.get(url_ricerca)
+            if citta:
+                print(f"\nIl prefisso {prefisso} indica che il numero potrebbe essere registrato a {citta}.")
 
-                if risposta_ricerca.status_code == 200:
-                    print(f"\nRisultati aggiuntivi della ricerca su Google per il nome {nome_estratto}:")
-                    soup = BeautifulSoup(risposta_ricerca.text, 'html.parser')
-                    risultati = soup.find_all('div', {'class_': lambda l: 'yuRUbf' in l})
+                # Esegue una ricerca inversa del nome e cognome nella città specifica
+                url_ricerca_citta = f"https://www.google.com/search?q={testo}+{citta}"
+                risposta_ricerca_citta = requests.get(url_ricerca_citta)
 
-                    for risultato in risultati:
-                        testo = risultato.get_text().strip()
-                        link = risultato.find('a')['href']
-                        print(f"[ {testo} ]({link})")
+                if risposta_ricerca_citta.status_code == 200:
+                    print(f"\nRisultati della ricerca inversa del nome e cognome nella città di {citta}:")
+                    soup_citta = BeautifulSoup(risposta_ricerca_citta.text, 'html.parser')
+                    risultati_citta = soup_citta.find_all('div', {'class': re.compile('yuRUbf')})
 
-                        # Estrae il nome utente, il nome e il cognome dal link del profilo di Instagram o Facebook
-                        if "instagram.com" in link or "facebook.com" in link:
-                            profilo = link.split("/")[-1]
-                            nome_utente = profilo.split("?")
-                            nome_cognome = testo.split(" - ")[-1].split(" · ")
-                            print(f"Nome utente: {nome_utente}, Nome e cognome: {nome_cognome}")
+                    for risultato_citta in risultati_citta:
+                        testo_citta = risultato_citta.get_text().strip()
+                        link_citta = risultato_citta.find('a')['href']
+                        print(f"[ {testo_citta} ]({link_citta})")
                 else:
-                    print("Impossibile recuperare i risultati della ricerca aggiuntivi.")
+                    print("Impossibile recuperare i risultati della ricerca inversa del nome e cognome nella città specifica.")
+            else:
+                print("Impossibile determinare la città associata al prefisso del numero di telefono.")
+
     else:
         print("Impossibile recuperare i risultati della ricerca.")
 
 def main():
-    numero_telefono = input("Inserisci il numero di telefono da cercare: ")
+    numero_telefono = input("Inserisci il numero di telefono con prefisso (es. +393491234567): ")
+
+    # Validazione del numero di telefono
+    pattern = re.compile(r'^\+39\d{10}$')
+    if not pattern.match(numero_telefono):
+        print("Il numero di telefono inserito non è valido. Assicurati di inserire un numero di telefono italiano con il prefisso +39.")
+        return
 
     print("\n" + "-" * 80)
     print(f"| Risultati per il numero {formatta_numero_telefono(numero_telefono)} |")
