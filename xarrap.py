@@ -67,11 +67,11 @@ def cerca_nome_e_cognome(numero_telefono):
             print(f"[ {testo} ]({link})")
 
             # Estrae il prefisso del numero di telefono per capire in che area geografica si trova
-            prefisso = numero_telefono[:4]
+            prefisso = numero_telefono[:5]
             citta = None
-            if prefisso == "+393":
+            if prefisso in ["+3906", "+39351"]:
                 citta = "Roma"
-            elif prefisso == "+3932":
+            elif prefisso in ["+3902", "+39346", "+39347"]:
                 citta = "Milano"
             # Aggiungi qui altri prefissi e città se necessario
 
