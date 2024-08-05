@@ -11,7 +11,7 @@ def cerca_accounts(numero_telefono):
     url_ricerca = {
         "Telegram": f"https://www.google.com/search?q=telegram+account+collegati+a+{formatta_numero_telefono(numero_telefono)}",
         "WhatsApp": f"https://www.google.com/search?q=whatsapp+account+collegati+a+{formatta_numero_telefono(numero_telefono)}",
-        "Instagram": f"https://www.google.com/search?q=instagram+account+collegati+a+{formatta_numero_telefono)}",
+        "Instagram": f"https://www.google.com/search?q=instagram+account+collegati+a+{formatta_numero_telefono(numero_telefono)}",
         "Facebook": f"https://www.google.com/search?q=facebook+account+collegati+a+{formatta_numero_telefono(numero_telefono)}"
     }
 
