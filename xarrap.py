@@ -16,9 +16,10 @@ def cerca_accounts(numero_telefono):
     }
 
     for piattaforma, url in url_ricerca.items():
-        risposta = requests.get(url)
+        try:
+            risposta = requests.get(url)
+            risposta.raise_for_status()
 
-        if risposta.status_code == 200:
             print(f"\n{'-' * 40}\nRisultati della ricerca su {piattaforma} per il numero {formatta_numero_telefono(numero_telefono)}:\n{'-' * 40}")
             soup = BeautifulSoup(risposta.text, 'html.parser')
             risultati = soup.find_all('div', {'class': re.compile('yuRUbf')})
@@ -27,36 +28,35 @@ def cerca_accounts(numero_telefono):
                 testo = risultato.get_text().strip()
                 link = risultato.find('a')['href']
                 print(f"[ {testo} ]({link})")
-        else:
-            print(f"Impossibile recuperare i risultati della ricerca per {piattaforma}.")
+        except requests.exceptions.RequestException as e:
+            print(f"Impossibile recuperare i risultati della ricerca per {piattaforma}. Errore: {e}")
 
 def ricerca_inverso_numero_telefono(numero_telefono):
-    """Ricerca inversa del numero di telefono utilizzando vari siti web."""
+    """Ricerca inversa del numero di telefono utilizzando Truecaller e Sync.me."""
     url_ricerca = {
-        "Whitepages": f"https://www.whitepages.com/phone/{numero_telefono}",
-        "Intelius": f"https://www.intelius.com/phone/{numero_telefono}",
-        "ZabaSearch": f"https://www.zabasearch.com/people/{numero_telefono}",
-        "Spokeo": f"https://www.spokeo.com/phone-lookup/{numero_telefono}",
-        "Truecaller": f"https://www.truecaller.com/search/it/{numero_telefono}"
+        "Truecaller": f"https://www.truecaller.com/search/it/{numero_telefono}",
+        "Sync.me": f"https://sync.me/it/search/{numero_telefono}"
     }
 
     for piattaforma, url in url_ricerca.items():
-        risposta = requests.get(url)
+        try:
+            risposta = requests.get(url)
+            risposta.raise_for_status()
 
-        if risposta.status_code == 200:
             print(f"\n{'-' * 40}\nRisultati della ricerca inversa per il numero {formatta_numero_telefono(numero_telefono)} su {piattaforma}:\n{'-' * 40}")
             soup = BeautifulSoup(risposta.text, 'html.parser')
             print(soup.prettify())
-        else:
-            print(f"Impossibile recuperare le informazioni da {piattaforma}.")
+        except requests.exceptions.RequestException as e:
+            print(f"Impossibile recuperare le informazioni da {piattaforma}. Errore: {e}")
 
 def cerca_nome_e_cognome(numero_telefono):
     """Utilizza un Google Dork per cercare il numero di telefono e il nome."""
     url_dork = f"https://www.google.com/search?q=site:facebook.com+%22{numero_telefono}%22+intitle:%22nome+cognome%22"
 
-    risposta = requests.get(url_dork)
+    try:
+        risposta = requests.get(url_dork)
+        risposta.raise_for_status()
 
-    if risposta.status_code == 200:
         print(f"\n{'-' * 40}\nRisultati del Google Dork per il numero {formatta_numero_telefono(numero_telefono)}:\n{'-' * 40}")
         soup = BeautifulSoup(risposta.text, 'html.parser')
         risultati = soup.find_all('div', {'class': re.compile('yuRUbf')})
@@ -96,8 +96,8 @@ def cerca_nome_e_cognome(numero_telefono):
             else:
                 print("Impossibile determinare la città associata al prefisso del numero di telefono.")
 
-    else:
-        print("Impossibile recuperare i risultati della ricerca.")
+    except requests.exceptions.RequestException as e:
+        print(f"Impossibile recuperare i risultati della ricerca. Errore: {e}")
 
 def main():
     numero_telefono = input("Inserisci il numero di telefono con prefisso (es. +393491234567): ")
